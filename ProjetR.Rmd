@@ -1,0 +1,661 @@
+---
+title: "Application de transformation de Box-Cox"
+author: "LIAO puwei"
+date: "2020/11/10"
+output: pdf_document
+
+---
+\section{Introduction}
+Le but de ce projet est de étudier la régression linéaire entre 2 type d'observations, mais une avec la transformation , la raison pour laquelle on fait cette transformation est la significativité de régression linéaire des données d'observations d'origine n'est pas très fort, c'est à dire avec la régression linéaire d'observations d'origine, ce n'est pas très évident de prédire les observations de futur, mais après avoir la transformation,la régression linéaire est plus significative , ici il est plus facile à prédire les données de futur.Les 3 sections suivantes, on étudie d'abord la théorie de transformation de box cox, dans cette section, on cherche le meilleur coefficient de transformations box cox et ainsi les estimateurs de moyen et variance à partir de transformation, et puis , on peut construire la test pour tester si on conserve la valeur de coefficient de transformation ou pas,à partir de ce test , on peut facilement à trouver ce coefficient optimal.Dans la 2ème section, on simule les données, et on essaye de trouver le coefficient optimal dans cette exemple.et dans la dernière section, on étudie un exemple pratique, à partir des mesures Box et Draper, en faisant un test pour comparer des différentes modèles, le but c'est de voir quel paramètres de régression linéaire et ainsi quel modèle est plus pertinent pour cette régression linéaire.
+\section{Transformation de Box-Cox}
+
+à partir de cette section, on applique la transformation Box Cox  $h_{\lambda}$ de observations y pour faciliter à chercher une regréssion linéaire avec les données x, en considérons le modèle d'observations $(x_{i}, Y_{i})$ cherchons la regrésion linéaire entre $x_{i} \ et \ h_{\lambda}(y_{i})$ plutôt que celle de $x_{i} \ et \ Y_{i}$ on peut obtenir l'équation de la regréssion linéaire suivante
+
+\begin{equation}
+    h_{\lambda}(Y_{i}) = Z_{i} = x_{i}\theta + \epsilon_{i}, \epsilon_{i}\sim_{iid} \mathcal N(0,\sigma^2)
+\end{equation}
+où $x_{i}$ est i ème observation d'expérience et $\epsilon_{i}$
+le bruit iid gaussien. L'objectif
+est de déterminer $\lambda_{opt}$ permettant un meilleur ajustement en régression de $h(y)$ 
+Definissons la transformation de Box-Cox:
+$$\lambda\in\mathbb{R},\;\forall y>0,\;\tilde{h}_{\lambda}(y)=\left\{
+\begin{array}{rcl}
+\frac{y^\lambda-1}{\lambda} &\lambda\neq 0\\\\
+log(y)&\lambda = 0\\
+\end{array} \right. $$
+\subsection{1.1}
+$\tilde{h}_{\lambda}(y)$ n'est pas compatible théoriquement, dans ce cas si on a y negative, alors dans ce cas on ne peut pas utiliser tout les $\lambda$ théorique, par exemple, si  $\lambda=\frac{1}{2}$, dans ce cas, $\lambda$ ne peut pas etre trouver car y negative, c'est pour cette raison, on applique la tranformation $h_{\lambda}$ mais pas  $\tilde{h}_{\lambda}(y)$
+
+
+\subsection{1.2}pour estimer les paramètres calculons d'abord maximum de vraisemblance ,d'après la formule (1), on a $$h_{\lambda}(Y_{i})-x_i \theta = \epsilon_i \sim_{iid}\mathcal N(0,\sigma^2)$$
+
+soit $\Phi = h_\lambda -x \theta$ on cherche la fonction repartition $F_t(\Phi(y_i))$,et on la derive par rapport a $y_i$,on obtiendra la fonction densite $f(\Phi(y_i))$
+on obtient alors:
+ $$\frac{\partial F_{y_{i}}(\Phi(y_{i}))}{\partial y_{i}} = \frac{\partial h_{\lambda}(y_{i})}{\partial y_{i}}f(\Phi(y_i))$$
+maintenant on peut calculer sa vraisemblance
+$$L(\lambda,\theta,\sigma^2;y) = \prod_{i=1}^{n}\left|\frac{\partial h_{\lambda}(y_{i})}{\partial y_{i}}\right|\frac{1}{(2\pi\sigma^2)^\frac{1}{2}}exp(-\frac{1}{2\sigma^2}(h_{\lambda}(Y)-X\theta)^{'} (h_{\lambda}(Y)-X\theta))$$
+avec $J(\lambda,Y) = \prod_{i=1}^{n}\left|\frac{\partial h_{\lambda}(y_{i})}{\partial y_{i}}\right|$, car $L(\lambda,\theta,\sigma^2;y)$ doit être positive.
+
+
+
+
+
+
+
+\subsection{1.3}On va maintenant estimer $\widehat{\theta}$ l'EMV de $\theta$ et $\widehat{\sigma^2}$ l'EMV de $\sigma^2$
+$$logL = -\frac{n}{2}log(2\pi)-nlog(\sigma)-\frac{1}{2\sigma^2}(h_{\lambda}(Y)-X\theta)^{'}(h_{\lambda}(Y)-X\theta)+\sum_{i}^{n}log(\left|\frac{\partial h_{\lambda}(y_{i})}{\partial y_{i}}\right|)$$
+$$\frac{\partial logL}{\partial\theta} = \frac{1}{\sigma^2}X^{'}(h_{\lambda}(Y)-X\theta)$$
+Soit $\frac{\partial logL}{\partial\theta} = 0\;\; \Leftrightarrow\;\; \frac{1}{\sigma^2}X^{'}(h_{\lambda}(Y)-X\theta) = 0\;\; \Leftrightarrow\;\; \widehat{\theta} = (X^{'}X)^{-1}X^{'}h_{\lambda}(Y)$
+
+Vérification:
+$\frac{\partial^2 logL}{\partial\theta^2} = -\frac{1}{\sigma^2}X^{'}X\leq 0$
+Donc $$\widehat{\theta} = (X^{'}X)^{-1}X^{'}h_{\lambda}(Y)$$
+
+
+
+
+maintenant on calcule $\widehat{\sigma^2}$,
+$\frac{\partial logL}{\partial\sigma^2} = -\frac{n}{\sigma}+\frac{1}{\sigma^3}(h_{\lambda}(Y)-X\theta)^{'}(h_{\lambda}(Y)-X\theta)$
+Si $\frac{\partial logL}{\partial\sigma^2} = 0$ 
+$$\frac{n}{\sigma} = \frac{1}{\sigma^3}(h_{\lambda}(Y)-X\theta)^{'}(h_{\lambda}(Y)-X\theta)\;\;\Leftrightarrow\;\;\widehat{\sigma^2} = \frac{(h_{\lambda}(Y)-X\theta)^{'}(h_{\lambda}(Y)-X\theta)}{n}$$
+en remplacant $\theta$ par son estimateur:
+$$n\widehat{\sigma^2} = (Z-X(X'Z(X'X)^{-1}))'(Z-X(X'Z(X'X)^{-1}))$$
+$$=Z'Z-X'(X'Z(X'X)^-Z)Z-Z'X(X'Z(X'X)^-)+XX'(X'Z(X'X)^-)^2$$
+$$=Z'Z-2Z'X(X'Z(X'$$
+$$=Z'Z-Z'X(X'X)^-(X'Z)$$
+$$=Z'(I_n-X(X'X)^-X')Z$$
+on obtient alors 
+$$\widehat{\sigma^2}=\frac{Z'(I_n-X(X'X)^-X')Z}{n}$$
+
+Vérification:
+$$\frac{\partial^2 logL}{\partial\sigma^4} = \frac{n}{2\sigma^4}-\frac{1}{\sigma^6}(h_{\lambda}(Y)-X\theta)^{'}(h_{\lambda}(Y)-X\theta) $$
+ce qui a la meme signe que:
+$$\frac{n}{2}-\frac{\epsilon' \epsilon}{\sigma^2}$$
+En remplaçant $\sigma^2$ par $\widehat{\sigma^2}$, on obtient
+
+$$ \frac{n}{2} - \frac{n^2}{\widehat{\epsilon}' \widehat{\epsilon}} \leq 0  \ \ avec \ n \ assez  \ grand $$
+Donc $$\widehat{\sigma^2} = \frac{(h_{\lambda}(Y)-X\theta)^{'}(h_{\lambda}(Y)-X\theta)}{n}=\frac{Z'(I_n-X(X'X)^-X')Z}{n}$$
+
+
+
+
+
+On pourra calculer $L_{max}(\lambda)$ maintenant en fixant $\widehat{\theta} \ et \ \widehat{\sigma^2}$
+$$L_{max}(\lambda) = logL(\lambda, \widehat{\theta}(\lambda), \widehat{\sigma}^2(\lambda)$$ $$=-\frac{n}{2}log(2\pi)-\frac{n}{2}log\widehat{\sigma}^2(\lambda)-\frac{n}{2(h_{\lambda}(Y)-X\theta)^{'}(h_{\lambda}(Y)-X\theta)}(h_{\lambda}(Y)-X\theta)^{'}(h_{\lambda}(Y)-X\theta)+\sum_ilog|\frac{\partial h_{\lambda}(Y_i)}{\partial Y_i}|$$
+
+ici
+$$\sum_ilog|\frac{\partial h_{\lambda}(Y_i)}{\partial Y_i}|=(\lambda-1)\sum_ilog|Y_i|$$
+car
+$$|\frac{\partial h_{\lambda}(Y_i)}{\partial Y_i}| = |Y_i]^{\lambda -1}$$
+donc on obtient finalement que:
+$$L_{max}(\lambda) = -\frac{n}{2}log(2\pi)-\frac{n}{2}log\widehat{\sigma}^2(\lambda)-\frac{n}{2}+(\lambda -1)\sum_ilog|Y_i|$$
+
+$$= -\frac{n}{2} \ log(\widehat{\sigma}^2(\lambda))+(\lambda -1)\sum_ilog|Y_i|+a(n)$$
+Avec 
+$$a(n) = -\frac{n}{2}log(2\pi)-\frac{n}{2}$$
+
+Pour calculer $\widehat{\lambda}$, on utilise la méthode de l'EMV.
+Soit $g = (\prod_{i=1}^n|y_i|)^{\frac{1}{n}}$, et $y(x,g) = \frac{h_{\lambda}(y)}{g^{\lambda -1}}$
+Dans ce cas
+$$L_{max} = a(n) - \frac{n}{2}log\frac{g^{\lambda -1}y(\lambda,g)^{'}(I_n-H)g^{\lambda -1}y(\lambda,g)}{n}+(\lambda -1)log(g^n)$$
+avec $H = X(X^{'}X)^{-1}X^{'}$
+
+
+
+
+$$= a(n)-\frac{n}{2}log((g^{\lambda -1})^2)-\frac{n}{2}log(S_\lambda ^2)+nlog(g^{\lambda -1})$$
+$$=a(n)-\frac{n}{2}log(S_\lambda ^2)$$
+avec $S_\lambda ^2 = \frac{y(\lambda,g)^{'}(I_n-H)y(\lambda,g)}{n}$
+Ici, pour maximiser $L_{max}$, c'est la meme chose de minimiser $S_\lambda ^2$, ce qui est la somme des carrés residuelle de $y(\lambda,g)$, notons $SCR(\lambda)$, dans ce cas
+$$\widehat{\lambda}\in argmin_\lambda SCR(\lambda)$$
+
+
+\subsection{1.4}
+notons
+$\beta = \left( \begin{array}{ccc}
+\theta  \\
+\sigma^2  \\
+\lambda
+\end{array} 
+\right )$
+
+définissons $$\widehat{J}(\beta) = -\frac{\partial^2logL(\beta|y)}{\partial\beta\partial\beta^{'}}$$ définissons l'information de Fisher $$J(\beta) = \mathbb{E}(\widehat{J}(\beta))$$
+ ici$$(\frac{(J(\beta))}{n})^{\frac{1}{2}}\sqrt{n}(\widehat{\beta}-\beta)\stackrel{\mathcal{L}}{\longrightarrow}\mathcal{N}(0,I)$$
+
+
+Car $J(\beta)$ on ne le connait pas, on le remplace par un estimateur $\widehat{J}(\widehat{\beta})$
+Donc ici, 
+$$(\widehat{J}(\widehat{\beta}))^{\frac{1}{2}}(\widehat{\beta}-\beta)\stackrel{\mathcal{L}}{\longrightarrow}\mathcal{N}(0,I)$$
+et $\widehat{\beta}\sim\mathcal{N}(\beta,(\widehat{J}(\widehat{\beta}))^{-1})$
+
+
+
+$$-\hat{J}(\beta)=\left(\begin{array}{ccc}
+\frac{\partial^{2} \ell(\boldsymbol{\beta} \mid \boldsymbol{y})}{\partial \boldsymbol{\theta} \partial \boldsymbol{\theta}^{\prime}} & \frac{\partial^{2} \ell(\boldsymbol{\beta} \mid \boldsymbol{y})}{\partial \boldsymbol{\theta} \partial \sigma^{2}} & \frac{\partial^{2} \ell(\boldsymbol{\beta} \mid \boldsymbol{y})}{\partial \boldsymbol{\theta} \partial \lambda} \\\\
+\left(\frac{\partial^{2} \ell(\boldsymbol{\beta} \mid \boldsymbol{y})}{\partial \boldsymbol{\theta} \partial \sigma^{2}}\right)' & \frac{\partial^{2} \ell(\boldsymbol{\beta} \mid \boldsymbol{y})}{\partial\left(\sigma^{2}\right)^{2}} & \frac{\partial^{2} \ell(\boldsymbol{\beta} \mid \boldsymbol{y})}{\partial \sigma^{2} \partial \lambda} \\\\
+\left(\frac{\partial^{2} \ell(\boldsymbol{\beta} \mid \boldsymbol{y})}{\partial \boldsymbol{\theta} \partial \lambda}\right)' & \left(\frac{\partial^{2} \ell(\boldsymbol{\beta} \mid \boldsymbol{y})}{\partial \sigma^{2} \partial \lambda}\right)^{\prime} & \frac{\partial^{2} \ell(\boldsymbol{\beta} \mid \boldsymbol{y})}{\partial \lambda^{2}}
+\end{array}\right)$$
+
+
+$$=\frac{1}{\sigma^{2}}\left(\begin{array}{ccc}
+\boldsymbol{X}^{\prime} \boldsymbol{X} & \frac{\boldsymbol{X}^{\prime}(\boldsymbol{z}-\boldsymbol{X} \boldsymbol{\theta})}{\sigma^{2}} & -\boldsymbol{X}^{\prime} \boldsymbol{u} \\\\
+\frac{(\boldsymbol{z}-\boldsymbol{X} \boldsymbol{\theta})^{\prime} \boldsymbol{X}}{\sigma^{2}} & \frac{(\boldsymbol{z}-\boldsymbol{X} \boldsymbol{\theta})^{\prime}(\boldsymbol{z}-\boldsymbol{X} \boldsymbol{\theta})}{\sigma^{4}}-\frac{n}{\sigma^{2}} & -\frac{\boldsymbol{u}^{\prime}(\boldsymbol{z}-\boldsymbol{X} \boldsymbol{\theta})}{\sigma^{2}} \\\\
+-\boldsymbol{u}^{\prime} \boldsymbol{X} & -\frac{(\boldsymbol{z}-\boldsymbol{X} \boldsymbol{\theta})^{\prime} \boldsymbol{u}}{\sigma^{2}} & \boldsymbol{u}^{\prime} \boldsymbol{u}-\boldsymbol{v}^{\prime}(z-\boldsymbol{X} \boldsymbol{\theta})
+\end{array}\right)$$
+
+
+$$=\frac{1}{\sigma^{2}}\left(\begin{array}{cc}
+\widehat{J}(\beta)_{11} & \hat{J}(\beta)_{12} \\
+\widehat{J}(\beta)_{21} & \hat{J}(\beta)_{22}
+\end{array}\right)$$
+
+on peut pour ce moment estimer $Var(\widehat{\lambda})$ par
+
+$$\widehat{\operatorname{Var}}(\widehat{\lambda})=\sigma^{2}\left(\widehat{J}(\boldsymbol{\beta})_{22}-\widehat{\boldsymbol{J}}(\boldsymbol{\beta})_{21}\left[\widehat{\boldsymbol{J}}(\boldsymbol{\beta})_{11}\right]^{-1} \hat{\boldsymbol{J}}(\boldsymbol{\beta})_{12}\right)^{-1}$$
+alors a partir de ce moment ,on peut calculer cette estimateur:
+$$\begin{aligned}
+\widehat{\operatorname{Var}}(\widehat{\lambda}) &=\hat{\sigma}^{2}\left(\widehat{J}(\widehat{\beta})_{22}-\widehat{J}(\widehat{\beta})_{21}\left[\widehat{J}(\widehat{\beta})_{11}\right]^{-} \widehat{J}(\widehat{\beta})_{12}\right)^{-1} \\
+&=\hat{\sigma}^{2}\left[\hat{u}^{\prime} \hat{u}-\hat{v}^{\prime}(I-H) \hat{z}-\left(\hat{u}^{\prime} H \hat{u}+\frac{2\left(\hat{u}^{\prime}(I-H) \hat{z}\right)^{2}}{n \hat{\sigma}^{2}}\right)\right]^{-1} \\
+&=\hat{\sigma}^{2}\left[\hat{u}^{\prime}(I-H) \hat{u}-\hat{v}^{\prime}(I-H) \hat{z}-\frac{2\left(\hat{u}^{\prime}(I-H) \hat{z}\right)^{2}}{n \hat{\sigma}^{2}}\right]^{-1} \\
+&=-\left[\frac{\hat{v}^{\prime}(I-H) \hat{z}-\hat{u}^{\prime}(I-H) \hat{u}}{\hat{\sigma}^{2}}+\frac{2}{n}\left(\frac{\hat{u}^{\prime}(I-H) \hat{z}}{\hat{\sigma}^{2}}\right)^{2}\right]^{-1} \\
+&=-H(\widehat{\lambda})^{-1}
+\end{aligned}$$
+$avec \ H=X(X'X)^-X' \ , \ v_{i}=-\frac{\partial \boldsymbol{u}_{i}}{\partial \lambda} \ , u_{i}=\frac{\partial \boldsymbol{z}_{i}}{\partial \lambda}$
+
+$$\widehat{SE}(\widehat{\lambda})=\frac{1}{\sqrt{-H(\widehat{\lambda})}}$$
+
+$d'après \ ce \ qu'on \ a \ obtenu,\ on \ peut\ donc\ trouver\ l'intervalle\ de\ confiance :$
+$$\lambda \in{[\widehat{\lambda} \pm q_{1-\frac{\alpha}{2}}*\widehat{SE}(\widehat{\lambda})]}$$
+ $q_{1-\frac{\alpha}{2}} \  le \  quantile \ de \ loi \ normale\ de  \ niveau \ 1-\frac{\alpha}{2}$
+ 
+
+on voudrait construire un test de wald:
+$H_0:\lambda=\lambda_0 \ contre \ H1:\lambda\neq\lambda_0$
+$A=(0,0,1) \ \beta_0= \left( \begin{array}{ccc}
+\theta_0  \\
+\sigma^2_0  \\
+\lambda_0
+\end{array} 
+\right )$
+
+
+
+
+
+
+
+
+
+posons un test de wald:
+$$H_0:A(\beta-\beta_0)=0 \ contre \ H1:A(\beta-\beta_0)\neq0 $$
+$on \ peut \ alors \ definir \ la \ statistique \ de \ Wald:$
+$$W=[A( \hat{\beta}-\beta_0)'(A \hat{J}(\hat{\beta})^-A')^-A(\hat{\beta}-\beta_0)]$$
+
+$ce \  qui\ suit\ une\ loi\ \chi^2(1) \ sous\ H_0$
+
+$son \ intervalle \ de \ rejet \ est \ donc:$
+$$R_{\alpha}=\left\{x ; \quad W(x)>q_{1-\alpha}^{\chi^{2}(1)}\right\}$$
+
+
+
+
+
+
+
+
+\subsection{1.5}calculons leurs rapport de vraisemblance:
+$$LRV=-2log(\frac{L(\lambda)}{L(\widehat{\lambda})})$$
+$$=-2({-logL(\lambda)}-log{L(\widehat{\lambda})})$$
+$$=-2({L_{max}(\lambda)}-{L_{max}(\widehat{\lambda})})$$
+$$=2({L_{max}(\widehat{\lambda})}{-L_{max}(\lambda)})$$
+ce qui converge vers une loi de 
+$\chi^2(1)$
+posons un test hypothese : 
+$H_0:\lambda=\lambda_0 \ contre \ H1:\lambda\neq\lambda_0 \ et \ sous\ H_0$ 
+l'intervalle de rejet est la suivante:
+$$R_{\alpha}=\left\{T R V>q_{1-\alpha}^{\chi_{1}^{2}} \right\}$$
+$avec \ TRV=2({L_{max}(\widehat{\lambda})}{-L_{max}(\lambda_0)} , \ et\ \  q_{1-\alpha}^{\chi_{1}^{2}} \ quantile\ de \ niveau \ 1-\alpha \ de \ loi\  de \  \chi_{1}^{2}$
+
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\section{Test de la méthode sur des données simulées}
+
+Dans cette section, on simule les observation x et celles apres avoir la transformation z ,et celles de ne pas avoir la transformation y,et puis on etudie la regression lineaire entre x et z et celle entre x et y, pour savoir que la transformation est elle significative pour la régression linéaire. 
+\subsection{2.1}
+```{r echo=FALSE}
+#2.1
+#rm(list=objects())
+#graphics.off()
+lambda=0.3;
+a=5;
+b=1;
+variance=2
+n=50;
+p=2;
+set.seed(999)
+X<- rnorm(n=50)
+epsilo<-rnorm(n=50, mean = 0, sd = sqrt(2))
+
+
+#a partir de Xobs, on construit Z 
+Z=a + b%*%X+epsilo
+Z=t(Z);
+
+
+Xexp=as.matrix(cbind(1,X))
+#a partir de ce moment , on etudie la relation lineaire entre X et Z
+theta.estZ =solve(t(Xexp)%*%Xexp)%*% t(Xexp)%*%Z    #estimation de parametre de regression lineaire
+sigma.estZ =sqrt(sum( (Xexp%*%theta.estZ-Z)^2   )/(n-p)) #estimation de ecart type de epsilon
+VZ =solve(t(Xexp)%*%Xexp)*sigma.estZ^2                 #estimation de variance de epsilon
+stddevZ =sqrt(diag(VZ))                       #estimation de variance de chaque parametre
+
+
+
+
+#a partir de Z, on construit Y
+Y=(lambda*Z+1)^(1/lambda)
+
+
+#tout ce qui suit sont les meme estimation que precedente, mais en changeant Z par Y,
+#et la on etudie la relation lineaire entre X et Y
+theta.estY =solve(t(Xexp)%*%Xexp)%*% t(Xexp)%*%Y            
+sigma.estY =sqrt(sum( (Xexp%*%theta.estY-Y)^2   )/(n-p))
+VY =solve(t(Xexp)%*%Xexp)*sigma.estY^2
+stddevY =sqrt(diag(VY))
+
+
+#la graphe de regression lineaire entre X et Z
+plot(Z,(Xexp%*%theta.estZ),xlab = "profondeur observe",ylab = "profondeur observe")
+abline(0,1)
+
+
+##la graphe de regression lineaire entre X et Y
+plot(Y,(Xexp%*%theta.estY),xlab = "profondeur observe",ylab = "profondeur observe")
+abline(0,1)
+```
+
+
+C'est visible que la régression linéaire de x et z, c'est à dire celles après avoir la transformation est plus significative que la régression linéaire de x et y,c'est à dire celles qui ne pas avoir la transformation, parce que la graphe précédentes, dont tout les points sont tous plus proche à cette droite. 
+
+
+
+\subsection{2.2}
+
+on a deja cree la matrice d'experience Xexp la question precedente. d'apres la section 1, les code suivante nous permet de calculer l'estimation de variance de epsilon ce qui nous donne $Z'(I_n - X(X'X)^{-1}X')Z$ ou la matrice Q est égale à $I_n - X(X'X)^{-1}X'$
+dans cette question la fonction Lmle nous permet de calculer les coef de Lmax.
+
+```{r echo=FALSE}
+Q = diag(1,n)-Xexp%*%solve(t(Xexp)%*%Xexp)%*%t(Xexp)
+Lmle = function(Z){
+  n = length(Z)
+  sig2 = ( t(Z)%*%Q%*%Z )/n
+  -n/2*log(sig2)
+}
+
+tmp = rep(1, 50);
+
+
+
+hlambda = function(y,lambda){
+  if (y<=0){
+    ((-1*abs(y)^lambda)-1)/lambda
+  }
+  else{
+    ((abs(y)^lambda)-1)/lambda
+  }
+}
+
+
+#on code la fonction lmin qui calcule -Lmax(lambda)
+lmin = function(lambda, Y) {
+  Ynew=abs(Y);
+  Znew = vector()
+  for (i in 1:length(Y)) {
+    Znew[i] = hlambda(Y[i],lambda)
+  }
+  -(Lmle(Znew) + (lambda-1) * tmp%*%log(Ynew) - n/2*(log(2*pi)-1))
+}
+
+
+
+
+
+
+
+
+lambdas <- seq(0,2,0.01)
+Vlmin = Vectorize(lmin,"lambda")
+plot(lambdas, Vlmin(lambdas, Y))
+```
+d'après ce qu'on a pour les code, on peut tracer cette courbe $-L_{max}$ en fonction de $\lambda$ et  visiblement, le point qui minimise cette courbe est entre 0 et 0.5
+
+\bigskip
+\bigskip
+
+
+\subsection{2.3}
+```{r echo=FALSE}
+#resopt=nlm(lmin,Y=Y,p=2,hessian = TRUE)    #ce code fonctionne parfois et parfois fonctionne pas c'est pour ca j'ai mis # pour que ca reussi a compiler, je suis desole pour cette probleme, et sur mon pdf, j'ai fait copie coller directement le resultat que j'ai obtenu la premiere fois.
+```
+
+> resopt;
+$minimum
+[1] 132.8632
+
+$estimate
+[1] 0.3817253
+
+$gradient
+[1] -6.306777e-05
+
+$hessian
+         [,1]
+[1,] 33.91607
+
+$code
+[1] 1
+
+$iterations
+[1] 4
+
+d'apres ces résultat obtenus, on peut voir que ,le min c'est 132.8632 , et le point qui minimise cette courbe est 0.3817253, et d'après la partie théorique , on peut déduire facilement que l'estimateur de variance est 0.02948455, c'est à dire
+$$\hat{\lambda}=0.3817253$$
+$$\hat{var}(\hat{\lambda})=0.02948455$$
+
+\bigskip
+\bigskip
+
+
+\subsection{2.4}
+```{r echo=FALSE}
+#on peut donc trouver les valeurs minimum et le coordonnees associees a ce point
+
+minlmin=132.8632
+lambdaestime = 0.3817253
+```
+
+
+```{r echo=FALSE}
+varlambdaestime=1/33.91607
+```
+
+
+```{r echo=FALSE}
+alpha=0.05
+IClambda1=lambdaestime-qnorm(1-(alpha/2),mean=0,sd=1)*sqrt(varlambdaestime)
+IClambda2=lambdaestime+qnorm(1-(alpha/2),mean=0,sd=1)*sqrt(varlambdaestime)
+
+```
+D'après la section théorique, on en deduit donc intervalle de confiance de niveau $1-\alpha$ avec $\alpha=0.05$ pour $\lambda$ est la suivante:
+$$\lambda \in [0.04517861 \ , \ 0.718272]$$
+
+
+
+On effectue la test de Wald, pour tester les 4 hypothèse suivante(après avoir la traduction):
+$$H_0:\lambda=1$$
+$$H_0:\lambda=0.5$$
+$$H_0:\lambda=0.3$$
+$$H_0:\lambda=0$$
+
+Calculons alors les 4 statistique de wald et ainsi le quantile:
+$$w1=12.96488$$
+$$w2=0.4744487$$
+$$w3=0.2265263$$
+$$w4=4.942053$$
+$$q=3.84145$$
+```{r echo=FALSE}
+w1=(((lambdaestime-1)^2))/varlambdaestime   #rejet 12.96488
+w2=(((lambdaestime-0.5)^2))/varlambdaestime   # conserve 0.4744487
+w3=(((lambdaestime-0.3)^2))/varlambdaestime  #conserve 0.2265263
+w4=(((lambdaestime)^2))/varlambdaestime    #rejet     4.942053
+
+q=qchisq(1-(alpha),df=1)    #3.841459
+```
+
+Après avoir comparé les quatres statistiques, on rejette l'hypothèse nulle ce qui est plus grand que cette quantile, c'est à dire on conserve $H_0:\lambda=0.5 \ et \ H_0:\lambda=0.3$ et on rejette les 2 autres sous niveau de $\alpha=0.05$
+
+
+\subsection{2.5}
+Calculons alors les 4 statistique de rapport de vraisemblance:
+
+$$l1=11.66127$$
+$$l2=0.4663807$$
+$$l3=0.2289855$$
+$$l4=5.148459$$
+```{r echo=FALSE}
+L1=2*(-lmin(lambdaestime,Y)+lmin(1,Y)) #rejet  11.66127
+L2=2*(-lmin(lambdaestime,Y)+lmin(0.5,Y)) #conserve 0.4663807
+L3=2*(-lmin(lambdaestime,Y)+lmin(0.3,Y))  #conserve 0.2289855
+L4=2*(-lmin(lambdaestime,Y)+lmin(0.000001,Y)) #rejet 5.148459
+
+```
+les 2 test suit meme loi sous H0, donc on a le meme quantile les 2 tests, ici le test de rapport de vraisemblance nous dit la meme chose ,c'est qu'on conserve ces 2 hypotheses:
+$H_0:$la transformation a appliquer aux observations est en racine carree
+$H_0:\lambda=0.3$
+
+
+
+\subsection{2.6}
+
+```{r include=FALSE}
+"library('car')"
+#res = powerTransform(Y~X)
+#summary(res)
+#ces 2 code j'applique en ligne, parce que chez moi j'arrive jamais a installer le package car, et je copie coller le resultat que je compile en ligne, desole pour cette situation
+```
+On utilise la fonction powertransform pour comparer les resultats precedente
+ici on obtient:
+\bigskip
+\bigskip
+
+Loading required package: carData
+bcPower Transformation to Normality 
+   Est Power Rounded Pwr Wald Lwr Bnd Wald Upr Bnd
+Y1    0.3817         0.5       0.0452       0.7183
+
+Likelihood ratio test that transformation parameter is equal to 0
+ (log transformation)
+                           LRT df     pval
+LR test, lambda = (0) 5.148486  1 0.023267
+
+Likelihood ratio test that no transformation is needed
+                           LRT df       pval
+LR test, lambda = (1) 11.66127  1 0.00063815
+
+[1] "lambda= 1"
+[1] "TRV:  11.661267167003"
+[1] "p_value:  0.000638148590273264"
+[1] "conserve H_0? FALSE"
+[1] "lambda= 0.5"
+[1] "TRV:  0.466380664195356"
+[1] "p_value:  0.494656961440495"
+[1] "conserve H_0? TRUE"
+[1] "lambda= 0.3"
+[1] "TRV:  0.228985473731598"
+[1] "p_value:  0.632277106840418"
+[1] "conserve H_0? TRUE"
+[1] "lambda= 1e-06"
+[1] "TRV:  5.14845895351687"
+[1] "p_value:  0.0232670132748679"
+[1] "conserve H_0? FALSE"
+
+\bigskip
+\bigskip
+
+Ici on obtient tous la même résultat que précédentes, et pour les tests aussi, donc c'est bon
+
+
+
+
+\section{Cas pratique}
+\subsection{3.1}
+Dans cette section, on propose un exemple pratique mais en utilisant des mesures de Box et Draper
+Definissons le modele suivante:
+$$(M1) \ \ \ \ Y=\beta_1x_1+\beta_2x_2+\beta_3x_3+\epsilon=X\theta+\epsilon$$
+avec$\varepsilon \sim \mathcal{N}\left(0, \sigma^{2} I_{n}\right)$
+ainsi
+$$X=\left(\begin{array}{cccc}
+1 & x_{1,1} & x_{2,1} & x_{3,1} \\
+\vdots & \vdots & \vdots & \vdots \\
+1 & x_{1,27} & x_{2,27} & x_{3,27}
+\end{array}\right)
+$$
+$$\theta=\left(\begin{array}{c}
+\mu \\
+\beta_{1} \\
+\beta_{2} \\
+\beta_{3}
+\end{array}\right)$$
+
+le valeur ajuste apres avoir codé c'est
+
+
+
+
+```{r echo=FALSE}
+df=read.csv2("NbCycleRupture.csv")
+X=as.matrix(cbind(1,df[-1]))
+Y=as.matrix(df$y)
+theta.est=solve(t(X)%*%X)%*% t(X)%*%Y
+valajust=X%*%theta.est
+valajust
+
+```
+\bigskip
+
+\bigskip
+
+\bigskip
+
+Et la graphe de régression linéaire est la suivante
+
+```{r echo=FALSE}
+{plot(Y, X%*%theta.est, xlab = "Valeurs observées",ylab = "Valeurs ajustées")
+abline(0, 1)}
+
+res1=lm(y~.,data=df)
+summary(res1)
+#Multiple R-squared:  0.7291
+```
+
+\bigskip
+\bigskip
+\bigskip
+
+Ici on etudie la régression linéaire entre y et longueur, amplitude, chargement 
+
+
+```{r echo=FALSE}
+longueur=(df$x1*50)+300
+amplitude=df$x2+9
+chargement=(df$x3*5)+45
+
+Xnew=as.matrix(cbind(1,longueur,amplitude,chargement))
+
+theta.estnew=solve(t(Xnew)%*%Xnew)%*% t(Xnew)%*%Y
+valajustnew=Xnew%*%theta.estnew
+{plot(Y, Xnew%*%theta.estnew, xlab = "Valeurs observées",ylab = "Valeurs ajustées")
+abline(0, 1)}
+
+res2=lm(y~.,data=df)
+summary(res2)
+#multiple R-squared:  0.7291
+```
+
+
+
+\bigskip
+\bigskip
+d'après ces 2 modèles, on va facilement que, il n'y a pas de différences entre ces 2 modèles, et ainsi, multiple R-squared vaut 0.7291, c'est pas assez grand, donc la significativité de ces 2 régression linéaire sont faible, et de plus, ce P value est très petit, c'est à dire on ne garde pas ce modèle
+
+
+
+
+\bigskip
+\bigskip
+
+\subsection{3.2}
+
+Construisons un autre modele:
+$$(M2) \ \ \ \ \begin{aligned}
+Y=\mu+& \beta_{1} x_{1}+\beta_{2} x_{2}+\beta_{3} x_{3}+\beta_{4} x_{1}^{2}+\beta_{5} x_{2}^{2}+\beta_{6} x_{3}^{2} \\
+&+\beta_{7} x_{1} x_{2}+\beta_{8} x_{1} x_{3}+\beta_{9} x_{2} x_{3}
++\epsilon\end{aligned}$$
+
+
+
+$$
+X=\left(\begin{array}{lllllllll}
+x_{1} & x_{2} & x_{3} & x_{1}^{2} & x_{2}^{2} & x_{3}^{2} & x_{1} x_{2} & x_{1} x_{3} & x_{2} x_{3}
+\end{array}\right)$$
+$$
+\theta=\left(\begin{array}{c}
+\mu \\
+\beta_{1} \\
+\beta_{2} \\
+\beta_{3} \\
+\beta_{4} \\
+\beta_{5} \\
+\beta_{6} \\
+\beta_{7}\\
+\beta_{8} \\
+\beta_{9}
+\end{array}\right)$$
+
+
+
+
+```{r echo=FALSE}
+res=lm(formula=Y~df$x1 + df$x2 +df$x3+ I(df$x1^2)+I(df$x2^2)+I(df$x3^2)+I(df$x1*df$x2)+I(df$x3*df$x2)+I(df$x1*df$x3))
+```
+\bigskip
+\bigskip
+
+
+
+
+```{r echo=FALSE}
+plot(res$fitted,df$y,main="ajustes/observe")
+abline(0,1)
+```
+\bigskip
+\bigskip
+D'après cette graphe, on voit que la regression lineaire de ce modèle est plus précise que précédentes.
+
+\bigskip
+\bigskip
+
+```{r echo=FALSE}
+summary(res)
+```
+
+\bigskip
+\bigskip
+on voit que Multiple R-squared: 0.9379, cela veut dire que cette modèle est plus pertinent
+\bigskip
+\bigskip
+
+
+
+
+```{r echo=FALSE}
+res3=res=lm(formula=Y~df$x1 + df$x2 +df$x3)
+res=lm(formula=Y~df$x1 + df$x2 +df$x3+ I(df$x1^2)+I(df$x2^2)+I(df$x3^2)+I(df$x1*df$x2)+I(df$x3*df$x2)+I(df$x1*df$x3))
+anova(res3,res)
+```
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+Ici, p val = 0.0001154,ce qui est plus petit que 0.001, c'est a dire ajouter les termes d'ordres 2 rend la regression lineaire plus precise, donc ici on prefere la modele M2,donc l'ajout des variables d'intersection est preconiser.
+
+\subsection{3.3}
+(M1bis)et (M2bis) on propose tous la transformation box cox en (M1) et (M2)
+
+
+
+\section{conclusion}
+La transformation box cox nous permet de faciliter tout le temps la régression linéaire, mais il faut faire attention avec la choix de modèle.Parce que la choix de modele nous permet d'avoir une regression lineaire encore plus precise que les autre.
+
